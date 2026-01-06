@@ -4,8 +4,14 @@ import { useState } from "react";
 import Hero from "@/components/common/Hero";
 import React from "react";
 
-export default function page() {
+export default function Page() {
   const [agree, setAgree] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  // ✅ 폼 값 state
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [content, setContent] = useState("");
 
   const privacyText = `개인정보 처리방침
 (주)○○○(이하 "회사"라 한다)는 개인정보 보호법 제30조에 따라 정보주체의 개인정보를 보호하고 관련 고충을 신속하고 원활하게 처리하기 위하여 다음과 같이 개인정보 처리방침을 수립·공개합니다.
@@ -29,14 +35,49 @@ export default function page() {
 
 ※ 자세한 내용은 실제 회사 방침에 맞게 수정하세요.`;
 
-  const onSubmit = (e: { preventDefault: () => void }) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     if (!agree) {
       alert("개인정보 수집 및 이용에 동의해주세요.");
       return;
     }
-    // TODO: 여기서 API 호출/메일 발송/DB 저장 처리
-    alert("문의가 접수되었습니다!");
+
+    if (!name.trim() || !phone.trim() || !content.trim()) {
+      alert("필수 항목을 모두 입력해주세요.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/sms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: phone.trim(),
+          message: content.trim(),
+        }),
+      });
+
+      const j = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        alert(j?.error || "전송 실패");
+        return;
+      }
+
+      alert("문의가 접수되었습니다!");
+      // ✅ 초기화
+      setName("");
+      setPhone("");
+      setContent("");
+      setAgree(false);
+    } catch (err) {
+      alert("네트워크 오류로 전송에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,7 +86,6 @@ export default function page() {
 
       <section className="w-full flex justify-center px-4 py-16">
         <div className="w-full max-w-[1100px]">
-          {/* 타이틀 */}
           <h2 className="text-2xl font-semibold mb-10 text-center">문의하기</h2>
 
           <form onSubmit={onSubmit} className="w-full">
@@ -55,14 +95,30 @@ export default function page() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <span className="text-blue-600">*</span> 성함
                 </label>
-                <input type="text" placeholder="성함을 기재해주세요." className="w-full h-11 rounded-lg border border-gray-200 px-4 outline-none focus:border-gray-400" required />
+                <input
+                  type="text"
+                  placeholder="성함을 기재해주세요."
+                  className="w-full h-11 rounded-lg border border-gray-200 px-4 outline-none focus:border-gray-400"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={loading}
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <span className="text-blue-600">*</span> 연락처
                 </label>
-                <input type="tel" placeholder="연락처를 기재해주세요." className="w-full h-11 rounded-lg border border-gray-200 px-4 outline-none focus:border-gray-400" required />
+                <input
+                  type="tel"
+                  placeholder="연락처를 기재해주세요."
+                  className="w-full h-11 rounded-lg border border-gray-200 px-4 outline-none focus:border-gray-400"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  disabled={loading}
+                />
               </div>
             </div>
 
@@ -71,12 +127,19 @@ export default function page() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <span className="text-blue-600">*</span> 문의 내용
               </label>
-              <textarea placeholder="문의 내용을 기재해주세요." className="w-full min-h-[220px] rounded-lg border border-gray-200 p-4 outline-none focus:border-gray-400 resize-none" required />
+              <textarea
+                placeholder="문의 내용을 기재해주세요."
+                className="w-full min-h-[220px] rounded-lg border border-gray-200 p-4 outline-none focus:border-gray-400 resize-none"
+                required
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                disabled={loading}
+              />
             </div>
 
             {/* 동의 체크 */}
             <div className="mt-6 flex items-center gap-3">
-              <input id="agree" type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="h-4 w-4" />
+              <input id="agree" type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="h-4 w-4" disabled={loading} />
               <label htmlFor="agree" className="text-sm text-gray-700 font-medium">
                 개인정보 수집 및 이용 동의
               </label>
@@ -89,8 +152,8 @@ export default function page() {
 
             {/* 버튼 */}
             <div className="mt-10 flex justify-center">
-              <button type="submit" className="w-full max-w-[360px] h-16 rounded-lg bg-slate-700 text-white font-semibold hover:bg-slate-800 transition">
-                문의하기
+              <button type="submit" disabled={loading} className="w-full max-w-[360px] h-16 rounded-lg bg-slate-700 text-white font-semibold hover:bg-slate-800 transition disabled:opacity-60">
+                {loading ? "전송 중..." : "문의하기"}
               </button>
             </div>
           </form>

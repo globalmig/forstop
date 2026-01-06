@@ -38,8 +38,10 @@ export default function GNB() {
       <nav className="w-full">
         <div className="flex justify-between items-center w-full max-w-[1440px] mx-auto text-xl h-24 px-4">
           {/* 로고 */}
-          <Link href="/" className="font-bold text-white" onClick={close}>
-            포스탑
+          <Link href="/" className="font-bold text-white flex flex-col" onClick={close}>
+            <span className="inline-block text-white text-2xl tracking-[0.2em]">포스탑</span>
+
+            <span className="inline-block text-sm text-white/60 font-light tracking-[0.25em] ">POSTOP</span>
           </Link>
 
           {/* PC 메뉴 */}
