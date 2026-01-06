@@ -41,7 +41,7 @@ export default function ContactBanner() {
       mt-8
       inline-flex items-center justify-center
       rounded-full border border-white
-      px-10 py-4
+      px-10 py-3
       text-base md:text-lg
       font-medium
       transition
@@ -49,7 +49,7 @@ export default function ContactBanner() {
     "
             >
               문의하기
-              <span className="ml-3 opacity-70">&gt;</span>
+              <span aria-hidden="true">→</span>
             </Link>
           </div>
         </div>

@@ -1,4 +1,4 @@
-// app/admin/products/[id]/page.tsx
+// app/admin/products/[category]/[id]/page.tsx
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import ProductForm from "../../_components/ProductForm";
 
@@ -10,20 +10,19 @@ const TABLE_MAP: Record<string, string> = {
   toplight: "toplight_specs",
 };
 
-export default async function EditProductPage({ params }: { params: { id: string } }) {
-  let product: any = null;
-  let foundCategory: string | null = null;
-
-  for (const [category, table] of Object.entries(TABLE_MAP)) {
-    const { data } = await supabaseAdmin.from(table).select("*").eq("id", params.id).maybeSingle();
-    if (data) {
-      product = data;
-      foundCategory = category;
-      break;
-    }
+export default async function EditProductPage({ params }: { params: { category: string; id: string } }) {
+  const table = TABLE_MAP[params.category];
+  if (!table) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <h1 className="text-2xl font-bold mb-6 text-red-600">잘못된 카테고리: {params.category}</h1>
+      </div>
+    );
   }
 
-  if (!product || !foundCategory) {
+  const { data: product } = await supabaseAdmin.from(table).select("*").eq("id", params.id).maybeSingle();
+
+  if (!product) {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <h1 className="text-2xl font-bold mb-6 text-red-600">제품을 찾을 수 없습니다 (ID: {params.id})</h1>
@@ -31,8 +30,7 @@ export default async function EditProductPage({ params }: { params: { id: string
     );
   }
 
-  // ✅ 핵심: 폼이 URL 만들 때 쓸 category를 무조건 주입
-  const initial = { ...product, category: foundCategory };
+  const initial = { ...product, category: params.category };
 
   return (
     <div className="max-w-4xl mx-auto p-6 pt-32">

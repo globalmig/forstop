@@ -32,8 +32,8 @@ export default function ItemList({ items }: ItemListProps) {
         480: { slidesPerView: 1.6, spaceBetween: 16 },
         640: { slidesPerView: 2, spaceBetween: 18 },
         768: { slidesPerView: 2.5, spaceBetween: 20 },
-        1024: { slidesPerView: 3, spaceBetween: 24 },
-        1280: { slidesPerView: 4, spaceBetween: 30 },
+        1024: { slidesPerView: 5.5, spaceBetween: 24 },
+        1280: { slidesPerView: 5.5, spaceBetween: 30 },
       }}
     >
       {items.map((item) => (

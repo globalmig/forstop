@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 
 export default function Footer() {
@@ -12,6 +13,8 @@ export default function Footer() {
           <br />
           주소: 경상북도 포항시 북구 죽도로28번길 46, 1층(죽도동, 라오스데오)
         </p>
+        <br />
+        <Link href={"/admin"}>관리자페이지</Link>
       </div>
     </footer>
   );

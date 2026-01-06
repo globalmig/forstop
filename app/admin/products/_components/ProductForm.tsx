@@ -14,6 +14,7 @@ type ProductPayload = {
   description: string;
   model_name: string;
   specs: Record<string, string>;
+  detail_images: string; // ✅ DB에 JSON 문자열로 저장
 };
 
 const CATEGORY_OPTIONS: readonly CategoryOption[] = [
@@ -37,7 +38,7 @@ const SPEC_FIELDS: Record<string, SpecField[]> = {
     { label: "제품무게", key: "weight" },
     { label: "작동전류", key: "operating_current" },
     { label: "제품수명", key: "lifespan" },
-     { label: "제품출력", key: "productOutput" },
+    { label: "제품출력", key: "productOutput" },
   ],
   speaker: [
     { label: "사용범위", key: "range" },
@@ -96,6 +97,7 @@ const SPEC_FIELDS: Record<string, SpecField[]> = {
     { label: "방수등급", key: "waterproof" },
     { label: "소음레벨", key: "noise_level" },
     { label: "송풍거리", key: "air_distance" },
+    { label: "주파수", key: "frequency_hz" },
   ],
 };
 
@@ -107,6 +109,38 @@ function slugify(input: string) {
     .replace(/[^0-9a-z-]/g, "")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function parseJsonArray(raw: any): string[] {
+  if (!raw) return [];
+  if (Array.isArray(raw))
+    return raw
+      .map(String)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+  if (typeof raw === "string") {
+    const t = raw.trim();
+    if (!t) return [];
+    if (t.startsWith("[") && t.endsWith("]")) {
+      try {
+        const arr = JSON.parse(t);
+        if (Array.isArray(arr))
+          return arr
+            .map(String)
+            .map((s) => s.trim())
+            .filter(Boolean);
+      } catch {}
+    }
+    // fallback: comma separated
+    if (t.includes(","))
+      return t
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    return [t];
+  }
+  return [];
 }
 
 export default function ProductForm({ mode, id, initial }: { mode: "create" | "edit"; id?: string | number; initial?: any }) {
@@ -128,7 +162,6 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
     return "";
   }, [initial?.description]);
 
-  // ✅ flat 구조 기준: 현재 category의 spec key들을 initial에서 바로 뽑는다
   const initialSpecs = useMemo(() => {
     const cat = String(initial?.category || "");
     const fields = SPEC_FIELDS[cat] || [];
@@ -143,6 +176,9 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
     return cleaned;
   }, [initial]);
 
+  // ✅ 기존 상세이미지 URL들 (edit)
+  const initialDetailUrls = useMemo(() => parseJsonArray(initial?.detail_images), [initial?.detail_images]);
+
   const [form, setForm] = useState<ProductPayload>({
     slug: initial?.slug || "",
     product_name: initial?.product_name || "",
@@ -152,11 +188,44 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
     description: initialDesc,
     model_name: initial?.model_name || "",
     specs: initialSpecs,
+    detail_images: typeof initial?.detail_images === "string" ? initial.detail_images : JSON.stringify(initialDetailUrls),
   });
+
+  // ✅ 대표 이미지(단일)
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const previewUrl = useMemo(() => (imageFile ? URL.createObjectURL(imageFile) : ""), [imageFile]);
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  // ✅ 상세 이미지(다중)
+  const [detailKeepUrls, setDetailKeepUrls] = useState<string[]>(initialDetailUrls); // 기존 유지할 url
+  const [detailFiles, setDetailFiles] = useState<File[]>([]); // 새로 업로드할 파일
+
+  const detailPreviewUrls = useMemo(() => detailFiles.map((f) => URL.createObjectURL(f)), [detailFiles]);
+  useEffect(() => {
+    return () => {
+      detailPreviewUrls.forEach((u) => URL.revokeObjectURL(u));
+    };
+  }, [detailPreviewUrls]);
+
+  function removeKeepUrl(idx: number) {
+    setDetailKeepUrls((prev) => prev.filter((_, i) => i !== idx));
+  }
+  function removeDetailFile(idx: number) {
+    setDetailFiles((prev) => prev.filter((_, i) => i !== idx));
+  }
 
   // ✅ edit 페이지에서 initial이 주입/변경될 수 있으니 form 동기화
   useEffect(() => {
     if (!initial) return;
+
+    const urls = parseJsonArray(initial?.detail_images);
+    setDetailKeepUrls(urls);
+    setDetailFiles([]);
+
     setForm({
       slug: initial?.slug || "",
       product_name: initial?.product_name || "",
@@ -166,18 +235,10 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
       description: initialDesc,
       model_name: initial?.model_name || "",
       specs: initialSpecs,
+      detail_images: typeof initial?.detail_images === "string" ? initial.detail_images : JSON.stringify(urls),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial, initialDesc, initialSpecs]);
-
-  const [imageFile, setImageFile] = useState<File | null>(null);
-
-  const previewUrl = useMemo(() => (imageFile ? URL.createObjectURL(imageFile) : ""), [imageFile]);
-  useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
 
   // ✅ slug 자동 생성: category + product_code
   useEffect(() => {
@@ -208,9 +269,7 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    // ✅ edit는 category 라우트로, create는 기존 엔드포인트 유지(현재 상태 기준)
     const url = mode === "create" ? "/api/admin/products" : `/api/admin/products/${form.category}/${id}`;
-
     const method = mode === "create" ? "POST" : "PUT";
 
     const fd = new FormData();
@@ -222,7 +281,15 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
     fd.append("model_name", form.model_name);
     fd.append("specs", JSON.stringify(form.specs || {}));
     fd.append("current_image", form.image || "");
+
+    // ✅ 대표 이미지
     if (imageFile) fd.append("image", imageFile);
+
+    // ✅ 상세 이미지 연동
+    // - 기존 중 "유지할 URL들"
+    fd.append("detail_keep_urls", JSON.stringify(detailKeepUrls));
+    // - 새로 업로드할 파일들(여러 장)
+    detailFiles.forEach((f) => fd.append("detail_images", f));
 
     const res = await fetch(url, { method, body: fd });
 
@@ -260,8 +327,9 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
         <Field label="상품코드" value={form.product_code} onChange={onChange("product_code")} />
         <Field label="상품명" value={form.product_name} onChange={onChange("product_name")} required />
 
+        {/* 대표 이미지 */}
         <div className="md:col-span-2">
-          <label className="text-sm text-gray-600">이미지 업로드</label>
+          <label className="text-sm text-gray-600">대표 이미지 업로드</label>
           <input type="file" name="image" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)} />
 
           <div className="mt-3 flex items-start gap-4">
@@ -280,6 +348,69 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
               <div className="mt-1 text-gray-400">* 새 이미지를 선택하지 않으면 기존 이미지가 유지됩니다.</div>
             </div>
           </div>
+        </div>
+
+        {/* 상세 이미지 */}
+        <div className="md:col-span-2">
+          <label className="text-sm text-gray-600">상세 이미지 업로드 (여러 장 가능)</label>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => {
+              const files = Array.from(e.target.files ?? []);
+              if (!files.length) return;
+              setDetailFiles((prev) => [...prev, ...files]);
+              e.currentTarget.value = "";
+            }}
+          />
+
+          <div className="mt-3 text-xs text-gray-500">
+            유지 중인 상세 이미지: <b>{detailKeepUrls.length}</b>장 / 새로 추가: <b>{detailFiles.length}</b>장
+            <div className="mt-1 text-gray-400">* 수정 시: “유지 중”에서 X 누르면 해당 이미지는 저장 시 제거됩니다.</div>
+          </div>
+
+          {detailKeepUrls.length > 0 && (
+            <div className="mt-4">
+              <p className="text-xs text-gray-600 mb-2">유지 중인 상세 이미지</p>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+                {detailKeepUrls.map((url, idx) => (
+                  <div key={`${url}-${idx}`} className="relative w-full aspect-square rounded-xl border bg-white overflow-hidden">
+                    <img src={url} alt={`keep-${idx}`} className="w-full h-full object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => removeKeepUrl(idx)}
+                      className="absolute top-2 right-2 rounded-full bg-black/70 text-white w-6 h-6 text-xs flex items-center justify-center"
+                      title="제거"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {detailFiles.length > 0 && (
+            <div className="mt-5">
+              <p className="text-xs text-gray-600 mb-2">새로 추가한 상세 이미지(업로드 예정)</p>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+                {detailPreviewUrls.map((url, idx) => (
+                  <div key={`${url}-${idx}`} className="relative w-full aspect-square rounded-xl border bg-white overflow-hidden">
+                    <img src={url} alt={`new-${idx}`} className="w-full h-full object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => removeDetailFile(idx)}
+                      className="absolute top-2 right-2 rounded-full bg-black/70 text-white w-6 h-6 text-xs flex items-center justify-center"
+                      title="제거"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <Field label="모델명" value={form.model_name} onChange={onChange("model_name")} />

@@ -59,8 +59,8 @@ export default async function Page() {
         <h2>다양한 제품을 확인하고, 안전의 새로운 기준을 경험해보세요</h2>
         <p>다양한 제품을 확인하고, 안전의 새로운 기준을 경험해보세요</p>
 
-        <Link href="/products" className="border text-[#2F7EF9] rounded-full border-[#2F7EF9] px-10 py-3 mb-4">
-          ALL PRODUCTS <span aria-hidden="true">&gt;</span>
+        <Link href="/products" className="border text-[#2F7EF9] rounded-full border-[#2F7EF9] px-10 py-3 my-5 mb-10 hover:bg-[#2F7EF9] hover:text-[white]">
+          ALL PRODUCTS <span aria-hidden="true">→</span>
         </Link>
 
         {/* ✅ 카테고리 통합 상품 리스트 (slug 없는 상품 제외됨) */}

@@ -33,7 +33,6 @@ const CATEGORY_TABLE: Record<string, string> = {
 
 type SpecField = { label: string; key: string; aliases?: string[] };
 
-// ✅ DB 컬럼명이 다를 가능성 대비해서 aliases 추가 가능
 const SPEC_FIELDS: Record<string, SpecField[]> = {
   toplight: [
     { label: "정격전압", key: "voltage" },
@@ -45,11 +44,7 @@ const SPEC_FIELDS: Record<string, SpecField[]> = {
     { label: "제품무게", key: "weight" },
     { label: "작동전류", key: "operating_current", aliases: ["op_current", "working_current"] },
     { label: "제품수명", key: "lifespan", aliases: ["life", "life_span"] },
-    {
-      label: "제품출력",
-      key: "productOutput",
-      aliases: ["product_output", "output_power", "output", "power_output", "productOutput"],
-    },
+    { label: "제품출력", key: "productOutput", aliases: ["product_output", "output_power", "output", "power_output", "productOutput"] },
   ],
   speaker: [
     { label: "사용범위", key: "range" },
@@ -108,6 +103,7 @@ const SPEC_FIELDS: Record<string, SpecField[]> = {
     { label: "방수등급", key: "waterproof" },
     { label: "소음레벨", key: "noise_level" },
     { label: "송풍거리", key: "air_distance" },
+    { label: "주파수", key: "frequency_hz" },
   ],
 };
 
@@ -119,6 +115,7 @@ type ProductRow = {
   product_code: string | null;
   category: string | null;
   description: unknown | null;
+  detail_images?: unknown | null; // ✅ 추가
   model_name: string | null;
   [key: string]: any;
 };
@@ -138,7 +135,6 @@ function toStringArray(v: unknown): string[] {
   return [];
 }
 
-// ✅ 카테고리 값이 한글/대문자/라벨로 와도 heavy/toplight... 로 맞춰줌
 function normalizeCategory(raw: unknown): "" | keyof typeof CATEGORY_LABEL {
   const c = String(raw ?? "")
     .trim()
@@ -152,44 +148,26 @@ function normalizeCategory(raw: unknown): "" | keyof typeof CATEGORY_LABEL {
   if (c === "etc" || c.includes("기타") || c.includes("카메라")) return "etc";
   if (c === "light" || c.includes("기타 제품")) return "light";
 
-  // 혹시 이미 정확한 키가 들어온 경우
-  if (["heavy", "toplight", "speaker", "cooling", "etc", "light"].includes(c)) {
-    return c as any;
-  }
-
+  if (["heavy", "toplight", "speaker", "cooling", "etc", "light"].includes(c)) return c as any;
   return "";
 }
 
-// ✅ spec value를 key 또는 aliases로 찾아서 가져오기
 function pickValue(row: ProductRow, key: string, aliases?: string[]) {
   if (key in row) return row[key];
-  if (aliases) {
-    for (const a of aliases) {
-      if (a in row) return row[a];
-    }
-  }
+  if (aliases) for (const a of aliases) if (a in row) return row[a];
   return undefined;
 }
 
 async function getProductBySlug(slug: string): Promise<ProductRow | null> {
   for (const [cat, table] of Object.entries(CATEGORY_TABLE)) {
     const { data, error } = await supabase.from(table).select("*").eq("slug", slug).maybeSingle();
-
     if (error) {
       console.error(`[getProductBySlug] table=${table} error=`, error.message);
       continue;
     }
-
     if (data) {
       const row = data as ProductRow;
-
-      // ✅ 여기 핵심: DB category가 뭘로 오든 table 기준 cat을 우선 적용 + normalize
       row.category = normalizeCategory(row.category) || (cat as any);
-
-      // console.log(`✅ Found in table: ${table}`);
-      // console.log(`📦 Normalized Category: ${row.category}`);
-      // console.log(`📝 All columns:`, Object.keys(data));
-
       return row;
     }
   }
@@ -206,36 +184,18 @@ function buildSpecs(p: ProductRow): Spec[] {
     if (v && v !== "null" && v !== "undefined") specs.push({ label, value: v });
   };
 
-  // 공통 - 모델명
   if (p.model_name) push("모델명", p.model_name);
 
-  console.log(`🔍 Building specs for category: ${cat}`);
-  console.log(
-    `📋 Expected fields:`,
-    fields.map((f) => f.key)
-  );
-
-  // ✅ 누락 필드 체크 + aliases로 값 찾기
   fields.forEach((f) => {
     const value = pickValue(p, f.key, f.aliases);
-
-    if (value === undefined) {
-      // 디버깅에 도움되는 누락 로그
-      console.log(`🚨 Missing field: ${f.key} (aliases: ${f.aliases?.join(",") ?? "-"})`);
-    } else {
-      console.log(`  - ${f.label} (${f.key}):`, value);
-    }
-
     push(f.label, value);
   });
 
-  console.log(`✅ Total specs built: ${specs.length}`);
   return specs;
 }
 
 export default async function ProductDetailPage({ params }: PageProps) {
   const product = await getProductBySlug(params.slug);
-
   if (!product) notFound();
 
   const title = product.product_name ?? "제품";
@@ -247,9 +207,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const items = toStringArray(product.description);
   const specs = buildSpecs(product);
 
+  // ✅ 상세 이미지 리스트
+  const detailImages = toStringArray(product.detail_images);
+
   return (
     <>
-      <Hero img={img} subtitle={categoryLabel} title={title} sub={product.product_code ?? ""} />
+      <Hero img={"/image/hero_product.png"} subtitle={categoryLabel} title={title} sub={product.product_code ?? ""} />
 
       <section className="w-full max-w-[1440px] mx-auto px-4 py-20">
         <div className="grid lg:grid-cols-2 gap-8 items-start">
@@ -268,6 +231,26 @@ export default async function ProductDetailPage({ params }: PageProps) {
           </div>
         </div>
       </section>
+
+      {/* ✅ 상세 이미지 */}
+      {detailImages.length > 0 && (
+        <section className="py-20 px-4">
+          <div className="max-w-[1440px] mx-auto">
+            <h2 className="text-center mb-10">상세 이미지</h2>
+
+            <div className="space-y-6">
+              {detailImages.map((src, idx) => (
+                <div key={idx} className="relative w-full overflow-hidden rounded-2xl bg-gray-50 border">
+                  {/* height는 니 디자인에 맞게 */}
+                  <div className="relative w-full h-[520px]">
+                    <Image src={src} alt={`${title}-detail-${idx + 1}`} fill className="object-contain" unoptimized />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 핵심기능 */}
       {items.length > 0 && (

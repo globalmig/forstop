@@ -60,12 +60,12 @@ export default function FilterDropdown({ label = "전체", options, defaultValue
   };
 
   return (
-    <div ref={wrapRef} className={`relative mb-24 inline-block ${className}`}>
+    <div ref={wrapRef} className={`relative mb-8 md:mb-24 inline-block ${className}`}>
       {/* Trigger */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="min-w-[240px] h-[62px] px-3 rounded-md border border-gray-300 bg-white
+        className="w-[200px] md:min-w-[240px] h-[40px] md:h-[62px] px-3 rounded-md border border-gray-300 bg-white
                    flex items-center justify-between text-lg text text-gray-800
                    shadow-sm hover:border-gray-400"
         aria-haspopup="listbox"
@@ -77,7 +77,7 @@ export default function FilterDropdown({ label = "전체", options, defaultValue
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute left-0 mt-2 w-[240px] rounded-md border border-gray-300 bg-white shadow-lg overflow-hidden z-50" role="listbox">
+        <div className="absolute left-0 mt-2 w-[200px] md:w-[240px] rounded-md border border-gray-300 bg-white shadow-lg overflow-hidden z-50" role="listbox">
           {items.map((opt) => {
             const active = opt.value === selected.value;
             return (

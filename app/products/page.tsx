@@ -106,7 +106,7 @@ export default function Page() {
       <Hero img="/image/hero_product01.png" subtitle="ALL PRODUCTS" title="상품소개" />
 
       <div className="w-full max-w-[1440px] mx-auto px-4 pt-12 flex-col flex justify-center items-end">
-        <div className="flex items-center justify-start mb-6">
+        <div className="flex items-center justify-start">
           <DropBox options={filterOptions} defaultValue="all" onChange={setFilter} />
         </div>
 
@@ -115,10 +115,10 @@ export default function Page() {
         ) : filteredData.length === 0 ? (
           <div className="w-full py-20 text-center text-slate-500">해당 카테고리에 상품이 없습니다.</div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full pb-40">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full pb-40">
             {filteredData.map((item) => (
-              <div key={`${item.category}-${item.id}`} className="mb-12">
-                <CardProduct slug={item.slug} image={item.image} product_name={item.product_name} product_code={item.product_code} id={String(item.id)} />
+              <div key={`${item.category}-${item.id}`} className="mb-4 md:mb-12">
+                <CardProduct slug={item.slug} image={item.image} product_name={item.product_name} product_code={item.product_code} id={String(item.id)} category={item.category} />
               </div>
             ))}
           </div>
