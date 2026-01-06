@@ -2,9 +2,14 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 export default function GNB() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  // ✅ /admin 경로 여부
+  const isAdmin = pathname.startsWith("/admin");
 
   // 메뉴 열렸을 때 스크롤 잠금 + ESC로 닫기
   useEffect(() => {
@@ -29,7 +34,7 @@ export default function GNB() {
   const close = () => setOpen(false);
 
   return (
-    <header className="absolute top-0 left-0 w-full z-50">
+    <header className={["top-0 left-0 w-full z-50", isAdmin ? "fixed bg-black" : "absolute bg-transparent"].join(" ")}>
       <nav className="w-full">
         <div className="flex justify-between items-center w-full max-w-[1440px] mx-auto text-xl h-24 px-4">
           {/* 로고 */}
@@ -52,7 +57,6 @@ export default function GNB() {
 
           {/* 모바일 햄버거 버튼 */}
           <button type="button" className="md:hidden inline-flex items-center justify-center w-11 h-11" aria-label="메뉴 열기" aria-expanded={open} onClick={() => setOpen(true)}>
-            {/* 햄버거 아이콘 */}
             <span className="sr-only">메뉴</span>
             <div className="flex flex-col gap-1.5">
               <span className="block w-6 h-0.5 bg-white" />
@@ -74,7 +78,6 @@ export default function GNB() {
             <div className="flex items-center justify-between mb-6">
               <span className="font-bold text-lg">MENU</span>
               <button type="button" className="w-10 h-10 inline-flex items-center justify-center" aria-label="닫기" onClick={close}>
-                {/* X 아이콘 */}
                 <span className="text-2xl leading-none">×</span>
               </button>
             </div>
@@ -96,13 +99,6 @@ export default function GNB() {
                 </Link>
               </li>
             </ul>
-
-            {/* CTA 필요하면 */}
-            {/* <div className="mt-8">
-              <Link href="/contact" onClick={close} className="block text-center py-3 rounded-lg bg-black text-white">
-                문의하기
-              </Link>
-            </div> */}
           </div>
         </div>
       )}
