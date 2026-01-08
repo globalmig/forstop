@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://postop.co.kr
+
+# Sitemaps
+Sitemap: https://postop.co.kr/sitemap.xml
