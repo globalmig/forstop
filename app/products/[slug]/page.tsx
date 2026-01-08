@@ -6,6 +6,7 @@ import Image from "next/image";
 import Hero from "@/components/common/Hero";
 import Contact from "@/components/common/Contact";
 import { supabase } from "@/lib/supabase";
+import Hero2 from "@/components/common/Hero2";
 
 interface PageProps {
   params: { slug: string };
@@ -212,11 +213,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   return (
     <>
-      <Hero img={"/image/hero_product.png"} subtitle={categoryLabel} title={title} sub={product.product_code ?? ""} />
+      <Hero2 img={"/image/hero_product.png"} subtitle={categoryLabel} title={title} sub={product.product_code ?? ""} />
 
       <section className="w-full max-w-[1440px] mx-auto px-4 py-20">
         <div className="grid lg:grid-cols-2 gap-8 items-start">
-          <div className="relative h-[320px] rounded-2xl overflow-hidden bg-gray-50">
+          <div className="relative h-[320px] md:h-[600px] rounded-2xl overflow-hidden bg-gray-50">
             <Image src={img} alt={title} fill className="object-contain" unoptimized />
           </div>
 
@@ -224,9 +225,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <h1 className="text-3xl font-bold mb-3">{title}</h1>
 
             <div className="border-t pt-6 space-y-2">
-              <p className="text-sm text-gray-500">카테고리: {categoryLabel}</p>
-              <p className="text-sm text-gray-500">제품코드: {product.product_code ?? "-"}</p>
-              {product.model_name && <p className="text-sm text-gray-500">모델명: {product.model_name}</p>}
+              <p className="text-base md:text-xl text-gray-500">카테고리: {categoryLabel}</p>
+              <p className="text-base md:text-xl text-gray-500">제품코드: {product.product_code ?? "-"}</p>
+              {product.model_name && <p className="text-base md:text-xl text-gray-500">모델명: {product.model_name}</p>}
             </div>
           </div>
         </div>

@@ -55,7 +55,7 @@ export default function Page() {
                 <span className="text-[#2F7EF9]">BUSINESS AREAS</span>
               </h2>
 
-              <div className="mt-8 grid grid-cols-1 gap-6 border-b border-[#515862]/50 py-10 pt-6 md:grid-cols-2">
+              {/* <div className="mt-8 grid grid-cols-1 gap-6 border-b border-[#515862]/50 py-10 pt-6 md:grid-cols-2">
                 <div>
                   <p className="text-[20px] font-semibold text-slate-700">물류 분야</p>
                   <p className="mt-1 text-[20px] font-semibold text-slate-700">(Logistics Safety)</p>
@@ -69,6 +69,37 @@ export default function Page() {
                   <li>이동식 에어컨 (1구 / 2구)</li>
                   <li>에어커튼</li>
                 </ul>
+              </div> */}
+
+              <div className="mt-8 grid grid-cols-1 gap-6 border-b border-[#515862]/50 py-10 pt-6 md:grid-cols-2">
+                <div>
+                  <p className="text-[20px] font-semibold text-slate-700">물류 분야</p>
+                  <p className="mt-1 text-[20px] font-semibold text-slate-700">(Logistics Safety)</p>
+                </div>
+
+                <ul className="list-disc space-y-1 pl-5 text-slate-600">
+                  <li>지게차용 사람인식 카메라 시스템</li>
+                  <li>후방 안전 시스템</li>
+                  <li>바디캠 / 액션캠</li>
+                  <li>KEY LOCKS (지문/카드/번호인식)</li>
+                  <li>에어커튼</li>
+                  <li>충전식 작업등</li>
+                </ul>
+              </div>
+
+              <div className="mt-8 grid grid-cols-1 gap-6 border-b border-[#515862]/50 py-10 pt-6 md:grid-cols-2">
+                <div>
+                  <p className="text-[20px] font-semibold text-slate-700">환경개선분야</p>
+                  <p className="mt-1 text-[20px] font-semibold text-slate-700">(Environmental Improvement)</p>
+                </div>
+
+                <ul className="list-disc space-y-1 pl-5 text-slate-600">
+                  <li>이동식 에어컨 (1구 / 2구)</li>
+                  <li>에어커튼</li>
+                  <li>산업용 냉풍기</li>
+                  <li>냉각팬 (1.5 / 2.0)</li>
+                  <li>산업용 이동식 회전형 안개분사기</li>
+                </ul>
               </div>
 
               <div className="mt-8 grid grid-cols-1 gap-6 border-b border-[#515862]/50 py-10 pt-6 md:grid-cols-2">
@@ -80,13 +111,9 @@ export default function Page() {
                 <ul className="list-disc space-y-1 pl-5 text-slate-600">
                   <li>탑 라이트 (150W/300W/600W/800W)</li>
                   <li>가상안전라인 표시기</li>
-                  <li>모션센서 음성경보장치 및 스피커</li>
-                  <li>산업용 냉풍기 및 HVLS 냉각팬</li>
-                  <li>산업용 이동식 회전형 안개분사기</li>
-                  <li>산업용 Britz 바디캠</li>
-                  <li>산업용 액션캠/CCTV</li>
-                  <li>충전식 작업등</li>
-                  <li>KEY LOCKS (지문/카드/번호인식)</li>
+                  <li>휴대용 멀티모션 경광 스피커</li>
+                  <li>모션센서옥외음성경보장치</li>
+                  <li>모션센서 음성경보장치</li>
                 </ul>
               </div>
             </div>
