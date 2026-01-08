@@ -50,11 +50,6 @@ export const metadata: Metadata = {
     },
   },
 
-  // canonical을 전역으로 기본 지정 (페이지별로 필요하면 page metadata에서 수정)
-  alternates: {
-    canonical: "/",
-  },
-
   // 키워드는 영향이 작지만, B2B/제품군에서 보조로 넣을 수는 있음
   keywords: ["포스탑", "산업안전", "안전경고시스템", "시각경고", "청각경고", "경광등", "산업현장 안전", "작업자 안전", "안전설비", "안전 솔루션"],
 
@@ -88,6 +83,9 @@ export const metadata: Metadata = {
   icons: {
     icon: [{ url: "/favicon.ico" }, { url: "/icon.png", type: "image/png" }],
     apple: [{ url: "/apple-touch-icon.png" }],
+  },
+  other: {
+    "naver-site-verification": "97d1b915cfcb373c4cddbdb2b24eb57fef7a509e",
   },
 
   // 웹앱/모바일 설치
