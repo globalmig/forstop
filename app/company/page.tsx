@@ -82,7 +82,7 @@ export default function Page() {
                   <li>후방 안전 시스템</li>
                   <li>바디캠 / 액션캠</li>
                   <li>KEY LOCKS (지문/카드/번호인식)</li>
-                  <li>에어커튼</li>
+
                   <li>충전식 작업등</li>
                 </ul>
               </div>
@@ -94,11 +94,12 @@ export default function Page() {
                 </div>
 
                 <ul className="list-disc space-y-1 pl-5 text-slate-600">
-                  <li>이동식 에어컨 (1구 / 2구)</li>
+                  <li>이동식 에어컨 (1구 / 2구 /3구)</li>
                   <li>에어커튼</li>
                   <li>산업용 냉풍기</li>
                   <li>냉각팬 (1.5 / 2.0)</li>
                   <li>산업용 이동식 회전형 안개분사기</li>
+                  <li>산업용 이동식 공기순환 냉각팬</li>
                 </ul>
               </div>
 
@@ -112,7 +113,7 @@ export default function Page() {
                   <li>탑 라이트 (150W/300W/600W/800W)</li>
                   <li>가상안전라인 표시기</li>
                   <li>휴대용 멀티모션 경광 스피커</li>
-                  <li>모션센서옥외음성경보장치</li>
+                  <li>모션센서 옥외음성경보장치</li>
                   <li>모션센서 음성경보장치</li>
                 </ul>
               </div>
