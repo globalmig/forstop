@@ -7,6 +7,9 @@ import DropBox from "@/components/common/DropBox";
 import Contact from "@/components/common/Contact";
 import { supabase } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const filterOptions = [
   { label: "전체", value: "all" },
   { label: "지게차 / 중장비", value: "heavy" },
