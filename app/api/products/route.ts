@@ -2,8 +2,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-export const revalidate = 60;
-
 type ProductListItem = {
   id: string;
   slug: string;

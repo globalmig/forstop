@@ -14,7 +14,7 @@ interface PageProps {
 type Spec = { label: string; value: string };
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = false;
 
 const CATEGORY_LABEL: Record<string, string> = {
   heavy: "지게차 / 중장비",
