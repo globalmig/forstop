@@ -14,7 +14,7 @@ type ProductPayload = {
   description: string;
   model_name: string;
   specs: Record<string, string>;
-  detail_images: string; // ✅ DB에 JSON 문자열로 저장
+  detail_images: string;
 };
 
 const CATEGORY_OPTIONS: readonly CategoryOption[] = [
@@ -132,7 +132,6 @@ function parseJsonArray(raw: any): string[] {
             .filter(Boolean);
       } catch {}
     }
-    // fallback: comma separated
     if (t.includes(","))
       return t
         .split(",")
@@ -142,6 +141,8 @@ function parseJsonArray(raw: any): string[] {
   }
   return [];
 }
+
+export const dynamic = "force-dynamic";
 
 export default function ProductForm({ mode, id, initial }: { mode: "create" | "edit"; id?: string | number; initial?: any }) {
   const router = useRouter();
@@ -177,7 +178,11 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
   }, [initial]);
 
   // ✅ 기존 상세이미지 URL들 (edit)
-  const initialDetailUrls = useMemo(() => parseJsonArray(initial?.detail_images), [initial?.detail_images]);
+  const initialDetailUrls = useMemo(() => {
+    const urls = parseJsonArray(initial?.detail_images);
+    console.log("🔍 initialDetailUrls parsed:", urls);
+    return urls;
+  }, [initial?.detail_images]);
 
   const [form, setForm] = useState<ProductPayload>({
     slug: initial?.slug || "",
@@ -201,8 +206,8 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
   }, [previewUrl]);
 
   // ✅ 상세 이미지(다중)
-  const [detailKeepUrls, setDetailKeepUrls] = useState<string[]>(initialDetailUrls); // 기존 유지할 url
-  const [detailFiles, setDetailFiles] = useState<File[]>([]); // 새로 업로드할 파일
+  const [detailKeepUrls, setDetailKeepUrls] = useState<string[]>(initialDetailUrls);
+  const [detailFiles, setDetailFiles] = useState<File[]>([]);
 
   const detailPreviewUrls = useMemo(() => detailFiles.map((f) => URL.createObjectURL(f)), [detailFiles]);
   useEffect(() => {
@@ -218,11 +223,13 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
     setDetailFiles((prev) => prev.filter((_, i) => i !== idx));
   }
 
-  // ✅ edit 페이지에서 initial이 주입/변경될 수 있으니 form 동기화
+  // ✅ initial 변경 감지 (edit 모드에서만 동작하도록 개선)
   useEffect(() => {
-    if (!initial) return;
+    if (!initial || mode !== "edit") return;
 
     const urls = parseJsonArray(initial?.detail_images);
+    console.log("🔄 Syncing initial data, detail_images:", urls);
+
     setDetailKeepUrls(urls);
     setDetailFiles([]);
 
@@ -237,10 +244,9 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
       specs: initialSpecs,
       detail_images: typeof initial?.detail_images === "string" ? initial.detail_images : JSON.stringify(urls),
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initial, initialDesc, initialSpecs]);
+  }, [initial?.id]); // ✅ id만 감지 (무한루프 방지)
 
-  // ✅ slug 자동 생성: category + product_code
+  // ✅ slug 자동 생성
   useEffect(() => {
     const categoryPart = form.category ? slugify(form.category) : "";
     const codePart = form.product_code ? slugify(form.product_code) : "";
@@ -253,7 +259,7 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
 
   const onChangeSpec = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((p) => ({ ...p, specs: { ...p.specs, [key]: e.target.value } }));
 
-  // ✅ 카테고리 바뀌면 해당 카테고리 spec key만 유지
+  // ✅ 카테고리 변경 시 스펙 초기화
   useEffect(() => {
     const fields = SPEC_FIELDS[form.category] || [];
     if (!fields.length) return;
@@ -263,14 +269,10 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
       fields.forEach((f) => (next[f.key] = p.specs?.[f.key] ?? ""));
       return { ...p, specs: next };
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.category]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    const url = mode === "create" ? "/api/admin/products" : `/api/admin/products/${form.category}/${id}`;
-    const method = mode === "create" ? "POST" : "PUT";
 
     const fd = new FormData();
     fd.append("slug", form.slug);
@@ -285,25 +287,66 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
     // ✅ 대표 이미지
     if (imageFile) fd.append("image", imageFile);
 
-    // ✅ 상세 이미지 연동
-    // - 기존 중 "유지할 URL들"
+    // ✅ 상세 이미지
+    console.log("📤 Submitting - keep URLs:", detailKeepUrls);
+    console.log(
+      "📤 Submitting - new files:",
+      detailFiles.map((f) => f.name)
+    );
+
     fd.append("detail_keep_urls", JSON.stringify(detailKeepUrls));
-    // - 새로 업로드할 파일들(여러 장)
     detailFiles.forEach((f) => fd.append("detail_images", f));
 
-    const res = await fetch(url, { method, body: fd });
+    try {
+      if (mode === "edit") {
+        const url = `/api/admin/products/${form.category}/${id}`;
+        const res = await fetch(url, { method: "PUT", body: fd });
 
-    if (!res.ok) {
-      const j = await res.json().catch(() => null);
-      alert(j?.error || "저장 실패");
-      return;
+        if (!res.ok) {
+          const j = await res.json().catch(() => null);
+          console.error("❌ Error response:", j);
+          alert(j?.error || "저장 실패");
+          return;
+        }
+
+        const result = await res.json();
+        console.log("✅ Update success:", result);
+
+        // ✅ 수정 성공 시 현재 페이지 새로고침 (상태 업데이트)
+        router.refresh();
+
+        // ✅ 업로드한 파일 목록 초기화
+        setDetailFiles([]);
+        setImageFile(null);
+
+        alert("수정되었습니다.");
+      } else {
+        const url = "/api/admin/products";
+        const res = await fetch(url, { method: "POST", body: fd });
+
+        if (!res.ok) {
+          const j = await res.json().catch(() => null);
+          console.error("❌ Error response:", j);
+          alert(j?.error || "저장 실패");
+          return;
+        }
+
+        const result = await res.json();
+        console.log("✅ Create success:", result);
+
+        // ✅ 생성 성공 시 목록 페이지로 이동
+        router.replace("/admin/products");
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("❌ Submit error:", error);
+      alert("요청 중 오류가 발생했습니다.");
     }
-
-    router.replace("/admin/products");
-    router.refresh();
   }
 
   const specFields = SPEC_FIELDS[form.category] || [];
+
+  console.log("🎨 Render - detailKeepUrls:", detailKeepUrls.length, "detailFiles:", detailFiles.length);
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
@@ -360,6 +403,10 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
             onChange={(e) => {
               const files = Array.from(e.target.files ?? []);
               if (!files.length) return;
+              console.log(
+                "📁 New files selected:",
+                files.map((f) => f.name)
+              );
               setDetailFiles((prev) => [...prev, ...files]);
               e.currentTarget.value = "";
             }}
@@ -367,7 +414,7 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
 
           <div className="mt-3 text-xs text-gray-500">
             유지 중인 상세 이미지: <b>{detailKeepUrls.length}</b>장 / 새로 추가: <b>{detailFiles.length}</b>장
-            <div className="mt-1 text-gray-400">* 수정 시: “유지 중”에서 X 누르면 해당 이미지는 저장 시 제거됩니다.</div>
+            <div className="mt-1 text-gray-400">* 수정 시: "유지 중"에서 X 누르면 해당 이미지는 저장 시 제거됩니다.</div>
           </div>
 
           {detailKeepUrls.length > 0 && (
@@ -375,12 +422,12 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
               <p className="text-xs text-gray-600 mb-2">유지 중인 상세 이미지</p>
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
                 {detailKeepUrls.map((url, idx) => (
-                  <div key={`${url}-${idx}`} className="relative w-full aspect-square rounded-xl border bg-white overflow-hidden">
+                  <div key={`keep-${idx}-${url.slice(-10)}`} className="relative w-full aspect-square rounded-xl border bg-white overflow-hidden">
                     <img src={url} alt={`keep-${idx}`} className="w-full h-full object-contain" />
                     <button
                       type="button"
                       onClick={() => removeKeepUrl(idx)}
-                      className="absolute top-2 right-2 rounded-full bg-black/70 text-white w-6 h-6 text-xs flex items-center justify-center"
+                      className="absolute top-2 right-2 rounded-full bg-black/70 text-white w-6 h-6 text-xs flex items-center justify-center hover:bg-red-600"
                       title="제거"
                     >
                       ×
@@ -396,12 +443,12 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
               <p className="text-xs text-gray-600 mb-2">새로 추가한 상세 이미지(업로드 예정)</p>
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
                 {detailPreviewUrls.map((url, idx) => (
-                  <div key={`${url}-${idx}`} className="relative w-full aspect-square rounded-xl border bg-white overflow-hidden">
+                  <div key={`new-${idx}-${detailFiles[idx].name}`} className="relative w-full aspect-square rounded-xl border bg-white overflow-hidden">
                     <img src={url} alt={`new-${idx}`} className="w-full h-full object-contain" />
                     <button
                       type="button"
                       onClick={() => removeDetailFile(idx)}
-                      className="absolute top-2 right-2 rounded-full bg-black/70 text-white w-6 h-6 text-xs flex items-center justify-center"
+                      className="absolute top-2 right-2 rounded-full bg-black/70 text-white w-6 h-6 text-xs flex items-center justify-center hover:bg-red-600"
                       title="제거"
                     >
                       ×
@@ -444,7 +491,9 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
         )}
       </div>
 
-      <button className="bg-black text-white px-5 py-2 rounded-xl">{mode === "create" ? "등록" : "수정 저장"}</button>
+      <button type="submit" className="bg-black text-white px-5 py-2 rounded-xl hover:bg-gray-800">
+        {mode === "create" ? "등록" : "수정 저장"}
+      </button>
     </form>
   );
 }
