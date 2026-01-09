@@ -6,6 +6,7 @@ import Hero from "@/components/common/Hero";
 import Contact from "@/components/common/Contact";
 import { supabase } from "@/lib/supabase";
 import Hero2 from "@/components/common/Hero2";
+import { unstable_noStore as noStore } from "next/cache";
 
 interface PageProps {
   params: { slug: string };
@@ -197,6 +198,7 @@ function buildSpecs(p: ProductRow): Spec[] {
 }
 
 export default async function ProductDetailPage({ params }: PageProps) {
+  noStore();
   const product = await getProductBySlug(params.slug);
   if (!product) notFound();
 

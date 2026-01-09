@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type CategoryOption = { label: string; value: string };
-export const dynamic = "force-dynamic";
+// ✅ 삭제: use client 컴포넌트에서 dynamic export 하면 빌드/세그먼트 옵션 꼬일 수 있음
+// export const dynamic = "force-dynamic";
 
 type ProductPayload = {
   slug: string;
@@ -243,7 +244,8 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
       specs: initialSpecs,
       detail_images: typeof initial?.detail_images === "string" ? initial.detail_images : JSON.stringify(urls),
     });
-  }, [initial?.id]); // ✅ id만 감지 (무한루프 방지)
+    // ✅ 핵심: id만 감지하면 detail_images만 바뀐 경우 “캐시처럼” 안 바뀜
+  }, [mode, initial?.id, initial?.detail_images, initialDesc, initialSpecs]);
 
   // ✅ slug 자동 생성
   useEffect(() => {

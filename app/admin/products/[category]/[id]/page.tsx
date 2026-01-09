@@ -1,6 +1,7 @@
 // app/admin/products/[category]/[id]/page.tsx
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import ProductForm from "../../_components/ProductForm";
+import { unstable_noStore as noStore } from "next/cache";
 
 const TABLE_MAP: Record<string, string> = {
   cooling: "cooling_specs",
@@ -13,6 +14,7 @@ const TABLE_MAP: Record<string, string> = {
 export const dynamic = "force-dynamic";
 
 export default async function EditProductPage({ params }: { params: { category: string; id: string } }) {
+  noStore();
   const table = TABLE_MAP[params.category];
   if (!table) {
     return (
