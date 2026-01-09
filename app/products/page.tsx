@@ -8,7 +8,6 @@ import Contact from "@/components/common/Contact";
 import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
-export const revalidate = false;
 
 const filterOptions = [
   { label: "전체", value: "all" },

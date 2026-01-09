@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 
 type CategoryOption = { label: string; value: string };
 export const dynamic = "force-dynamic";
-export const revalidate = false;
 
 type ProductPayload = {
   slug: string;

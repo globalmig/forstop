@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
-export const revalidate = false;
 
 // ✅ 카테고리별 테이블 맵 (부모 products_ligt 제거 기준)
 const TABLE_MAP: Record<string, string> = {
