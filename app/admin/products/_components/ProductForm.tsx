@@ -4,6 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type CategoryOption = { label: string; value: string };
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type ProductPayload = {
   slug: string;
@@ -141,8 +143,6 @@ function parseJsonArray(raw: any): string[] {
   }
   return [];
 }
-
-export const dynamic = "force-dynamic";
 
 export default function ProductForm({ mode, id, initial }: { mode: "create" | "edit"; id?: string | number; initial?: any }) {
   const router = useRouter();
@@ -320,6 +320,9 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
         setImageFile(null);
 
         alert("수정되었습니다.");
+        router.replace("/admin/products");
+        router.refresh();
+        return;
       } else {
         const url = "/api/admin/products";
         const res = await fetch(url, { method: "POST", body: fd });

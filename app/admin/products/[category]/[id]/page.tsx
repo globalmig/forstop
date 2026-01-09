@@ -11,6 +11,7 @@ const TABLE_MAP: Record<string, string> = {
 };
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function EditProductPage({ params }: { params: { category: string; id: string } }) {
   const table = TABLE_MAP[params.category];

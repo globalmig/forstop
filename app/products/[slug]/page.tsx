@@ -1,5 +1,4 @@
 // app/products/[slug]/page.tsx
-export const revalidate = 60;
 
 import { notFound } from "next/navigation";
 import Image from "next/image";
@@ -13,6 +12,9 @@ interface PageProps {
 }
 
 type Spec = { label: string; value: string };
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const CATEGORY_LABEL: Record<string, string> = {
   heavy: "지게차 / 중장비",
