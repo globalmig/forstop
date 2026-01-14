@@ -32,8 +32,7 @@ export default function Page() {
 
 제4조 (개인정보의 제3자 제공)
 회사는 원칙적으로 개인정보를 제3자에게 제공하지 않습니다.
-
-※ 자세한 내용은 실제 회사 방침에 맞게 수정하세요.`;
+`;
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
