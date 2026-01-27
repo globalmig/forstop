@@ -33,7 +33,8 @@ export default function ContactBanner() {
               <p>포스탑</p>
             </div>
 
-            <p className="mt-6 text-2xl md:text-4xl font-bold tracking-wide">010-2539-2878</p>
+            <p className="mt-6 text-2xl md:text-4xl font-bold tracking-wide">TEL: 010-2539-2878</p>
+            <p className="mt-6 text-2xl md:text-4xl font-bold tracking-wide">FAX: 054-611-5884</p>
 
             <Link
               href="/contact"

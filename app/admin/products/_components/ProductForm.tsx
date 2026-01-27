@@ -144,6 +144,13 @@ function parseJsonArray(raw: any): string[] {
   return [];
 }
 
+const VIDEO_EXTS = [".mp4", ".webm", ".ogg", ".mov", ".m4v", ".avi"];
+
+function isVideoUrl(url: string) {
+  const clean = (url || "").split("?")[0].toLowerCase();
+  return VIDEO_EXTS.some((ext) => clean.endsWith(ext));
+}
+
 export default function ProductForm({ mode, id, initial }: { mode: "create" | "edit"; id?: string | number; initial?: any }) {
   const router = useRouter();
 
@@ -210,6 +217,7 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
   const [detailFiles, setDetailFiles] = useState<File[]>([]);
 
   const detailPreviewUrls = useMemo(() => detailFiles.map((f) => URL.createObjectURL(f)), [detailFiles]);
+  const detailPreviewTypes = useMemo(() => detailFiles.map((f) => f.type), [detailFiles]);
   useEffect(() => {
     return () => {
       detailPreviewUrls.forEach((u) => URL.revokeObjectURL(u));
@@ -402,7 +410,7 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
           <label className="text-sm text-gray-600">상세 이미지 업로드 (여러 장 가능)</label>
           <input
             type="file"
-            accept="image/*"
+            accept="image/*,video/*"
             multiple
             onChange={(e) => {
               const files = Array.from(e.target.files ?? []);
@@ -427,7 +435,11 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
                 {detailKeepUrls.map((url, idx) => (
                   <div key={`keep-${idx}-${url.slice(-10)}`} className="relative w-full aspect-square rounded-xl border bg-white overflow-hidden">
-                    <img src={url} alt={`keep-${idx}`} className="w-full h-full object-contain" />
+                    {isVideoUrl(url) ? (
+                      <video src={url} className="w-full h-full object-contain" controls />
+                    ) : (
+                      <img src={url} alt={`keep-${idx}`} className="w-full h-full object-contain" />
+                    )}
                     <button
                       type="button"
                       onClick={() => removeKeepUrl(idx)}
@@ -448,7 +460,11 @@ export default function ProductForm({ mode, id, initial }: { mode: "create" | "e
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
                 {detailPreviewUrls.map((url, idx) => (
                   <div key={`new-${idx}-${detailFiles[idx].name}`} className="relative w-full aspect-square rounded-xl border bg-white overflow-hidden">
-                    <img src={url} alt={`new-${idx}`} className="w-full h-full object-contain" />
+                    {detailPreviewTypes[idx]?.startsWith("video/") ? (
+                      <video src={url} className="w-full h-full object-contain" controls />
+                    ) : (
+                      <img src={url} alt={`new-${idx}`} className="w-full h-full object-contain" />
+                    )}
                     <button
                       type="button"
                       onClick={() => removeDetailFile(idx)}

@@ -133,7 +133,7 @@ export default function Page() {
               {/* TODO: 구글 맵 넣기 */}
               <div className="mt-4 md:mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 ">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3227.559773253578!2d129.337364!3d36.0066217!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x356701cb964df655%3A0x82108e96c7f6f92c!2zKOyjvCntj6zsiqTtg5E!5e0!3m2!1sko!2skr!4v1767003821241!5m2!1sko!2skr"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d248.34954667841438!2d129.3372710160803!3d36.00661280391964!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x356701cb964df655%3A0x82108e96c7f6f92c!2zKOyjvCntj6zsiqTtg5E!5e0!3m2!1sko!2skr!4v1769491609113!5m2!1sko!2skr"
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"

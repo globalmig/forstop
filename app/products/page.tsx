@@ -99,8 +99,14 @@ export default function Page() {
   }, []);
 
   const filteredData = useMemo(() => {
-    if (filter === "all") return products;
-    return products.filter((p) => p.category === filter);
+    const base = filter === "all" ? products : products.filter((p) => p.category === filter);
+    return [...base].sort((a, b) => {
+      const an = (a.product_name || "").toLowerCase();
+      const bn = (b.product_name || "").toLowerCase();
+      if (an < bn) return -1;
+      if (an > bn) return 1;
+      return 0;
+    });
   }, [products, filter]);
 
   return (

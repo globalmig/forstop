@@ -138,6 +138,13 @@ function toStringArray(v: unknown): string[] {
   return [];
 }
 
+const VIDEO_EXTS = [".mp4", ".webm", ".ogg", ".mov", ".m4v", ".avi"];
+
+function isVideoUrl(url: string) {
+  const clean = (url || "").split("?")[0].toLowerCase();
+  return VIDEO_EXTS.some((ext) => clean.endsWith(ext));
+}
+
 function normalizeCategory(raw: unknown): "" | keyof typeof CATEGORY_LABEL {
   const c = String(raw ?? "")
     .trim()
@@ -246,8 +253,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
               {detailImages.map((src, idx) => (
                 <div key={idx} className="relative w-full overflow-hidden rounded-2xl bg-gray-50 border">
                   {/* height는 니 디자인에 맞게 */}
-                  <div className="relative w-full h-[520px]">
-                    <Image src={src} alt={`${title}-detail-${idx + 1}`} fill className="object-contain" unoptimized />
+                  <div className="relative w-full h-[720px] md:h-[900px] lg:h-[1000px]">
+                    {isVideoUrl(src) ? (
+                      <video src={src} className="w-full h-full object-contain" controls />
+                    ) : (
+                      <Image src={src} alt={`${title}-detail-${idx + 1}`} fill className="object-contain" unoptimized />
+                    )}
                   </div>
                 </div>
               ))}
